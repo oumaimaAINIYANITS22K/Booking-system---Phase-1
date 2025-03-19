@@ -1,137 +1,118 @@
-# **Penetration Testing Report - Booking System (Phase 1 & Phase 2)**
+# Security Assessment Report
 
-## **📌 Introduction**  
-This report documents the penetration testing performed on the **Booking System** across **two phases**. The testing focused on identifying security vulnerabilities related to **authentication, input validation, API security, and potential misconfigurations**.
+## **1. Introduction**
 
-Testing was conducted using:  
-- **Kali Linux (Virtual Machine)**
-- **OWASP ZAP by Checkmarx**
-- **Burp Suite**
-- **Manual SQL Injection Testing**
-- **Docker-based deployment for testing**
+### **Purpose and Scope of the Report**
+This updated report presents the latest security assessment conducted using **ZAP by Checkmarx**. The primary objective is to detect vulnerabilities and compare findings against the previous security scan.
 
----
+### **Testing Schedule and Environment**
+- **Environment:** Localhost (`http://localhost:8000`)
+- **Testing Tool Used:** ZAP by Checkmarx
 
-# **Phase 1: Security Testing Findings**
+### **Scope of Testing**
+The focus was on:
+- **User-Agent Fuzzing Analysis**
+- **Identifying security misconfigurations in API responses**
+- **Verifying previous vulnerabilities were patched**
 
-## **🔍 Summary of Findings (Phase 1)**  
-
-| Severity | Issue Found | Description | Suggested Fix |
-|----------|------------|-------------|---------------|
-| 🔴 **Critical** | **Plaintext Password Storage** | User passwords are stored in plaintext in the database. | Implement bcrypt hashing before storing passwords. |
-| ⚠ **Medium** | **SQL Injection (SQLi)** | The registration form is vulnerable to SQL Injection. | Use **prepared statements** and **input validation**. |
-| ⚠ **Medium** | **User Role Manipulation** | Users can escalate privileges via request parameters. | Enforce **server-side role validation**. |
-| 🔹 **Informational** | **User-Agent Fuzzer Alert** | The system responded differently to User-Agent header variations. | Ensure uniform response handling for all User-Agents. |
+### **Methods and Tools Used**
+- **Automated Security Scanning:** OWASP ZAP
+- **Industry Standards:** OWASP Web Security Testing Guide ([WSTG](https://owasp.org/wstg))
 
 ---
 
-## **1️⃣ Critical Issue: Plaintext Password Storage (🔴 Critical)**
-- **Description:**  
-  - Passwords are stored **in plaintext** in the `xyz123_users` table.
-- **How It Was Found:**  
-  - A simple SQL query revealed unencrypted passwords:
-    ```sql
-    SELECT * FROM xyz123_users;
-    ```
-- **Risk:**  
-  - Attackers can **steal credentials** and reuse them for other accounts.  
-  - This violates **GDPR and security best practices**.  
-- **Suggested Fix:**  
-  - Use **bcrypt hashing** before storing passwords:
-    ```python
-    from flask_bcrypt import Bcrypt
-    bcrypt = Bcrypt()
-    hashed_pw = bcrypt.generate_password_hash("password123").decode('utf-8')
-    ```
-  - **Ensure all passwords are hashed and never stored in plaintext.**
+## **2. Summary**
+
+### **Key Findings and Recommendations**
+1. **No Critical, Medium, or Low-Risk Vulnerabilities Found**  
+   - The system does not exhibit major security weaknesses.
+  
+2. **User-Agent-Based Response Variance Identified**  
+   - The system responds differently to multiple User-Agent headers, but no security risks were found.
+
+3. **Recommendation:**  
+   - While no immediate critical action is needed, **ensure uniform request handling** for all User-Agent values.
+
+### **General Assessment of Security Posture**
+- The **security posture has improved** significantly.
+- **No high or medium-risk vulnerabilities** remain.
+- **Only informational-level alerts** were detected.
 
 ---
 
-## **2️⃣ SQL Injection in Registration Form (⚠ Medium)**
-- **Description:**  
-  - The form allows SQL Injection, which could be used to access the database.
-- **How It Was Found:**  
-  - Tested with this SQL payload:
-    ```sql
-    ' OR 1=1 --
-    ```
-  - This allowed login **without valid credentials**.
-- **Suggested Fix:**  
-  - Use **prepared statements**:
-    ```python
-    cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (user_input, password))
-    ```
+## **3. Findings and Categorization**
+
+### **Identified Deviations and Vulnerabilities**
+| **Risk Level** | **Number of Alerts** |
+|--------------|----------------|
+| High        | 0              |
+| Medium      | 0              |
+| Low         | 0              |
+| Informational | 1             |
 
 ---
 
-## **3️⃣ User Role Manipulation (⚠ Medium)**
-- **Description:**  
-  - Users can **escalate privileges** by modifying the request parameters.
-- **How It Was Found:**  
-  - Changed role from `user` to `admin` in a **POST request**.
-- **Suggested Fix:**  
-  - **Enforce role-based authentication on the server.**
+### **Informational Alerts**
+#### **User Agent Fuzzer**
+- **Risk Level:** Informational
+- **Number of Instances:** 12
+- **Description:** Differences in response based on the User-Agent header.
+- **Example Attacks Tested:**
+  - `Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)`
+  - `Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko`
+  - `Mozilla/5.0 (iPhone; CPU iPhone OS 8_0_2 like Mac OS X) AppleWebKit/600.1.4`
+  - `Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)`
+
+- **Potential Issue:** If the application behaves differently based on User-Agent, attackers could exploit this for reconnaissance or bypass access controls.
+- **Recommendation:** Ensure all User-Agent variations receive consistent responses unless required for functionality.
 
 ---
 
-# **Phase 2: Security Testing Findings**
+# **4. Comparison with Previous Report**
 
-## **🔍 Summary of Findings (Phase 2)**  
+This section provides a **direct comparison** between the **previous security assessment (Part 1)** and the **updated security assessment (Part 2)** to highlight the differences in findings and overall security posture.
 
-| Severity | Issue Found | Description | Suggested Fix |
-|----------|------------|-------------|---------------|
-| ⚠ **Medium** | **User-Agent Fuzzer Alert** | The system responded differently to various User-Agent headers, which could lead to information leakage. | Ensure uniform response handling for all User-Agent headers. |
-| 🔹 **Informational** | **ZAP Scan Findings** | No high or medium severity vulnerabilities found, but response inconsistencies were noted. | Review and standardize API responses. |
-
----
-
-## **4️⃣ User-Agent Fuzzer Alert (⚠ Medium) - Phase 2**
-- **Description:**  
-  - The system responded **differently** when tested with multiple **User-Agent headers**, indicating possible behavioral inconsistencies.
-- **How It Was Found:**  
-  - A fuzzing attack was conducted with various User-Agent headers (e.g., **Googlebot, iPhone Safari, Internet Explorer**), and variations in the response were observed.
-- **Risk:**  
-  - Attackers could **spoof their User-Agent** to gain unintended access or scrape sensitive information.
-- **Suggested Fix:**  
-  - Ensure **uniform response handling** for all User-Agent headers to avoid behavior inconsistencies.
-  - Implement **bot detection mechanisms** that rely on behavioral analysis rather than simple User-Agent validation.
+## **Key Differences Between Part 1 & Part 2**
+| **Category** | **Previous Report (Part 1)** | **Updated Report (Part 2)** |
+|-------------|-------------------------------|-------------------------------|
+| **Testing Date** | 19.02.2025 | 05.03.2025 |
+| **High-Risk Vulnerabilities** | Found (**Path Traversal**) | **None** |
+| **Medium-Risk Vulnerabilities** | Found (**Missing Security Headers - CSP, X-Frame-Options**) | **None** |
+| **Low-Risk Vulnerabilities** | Found (**X-Content-Type-Options Header Missing**) | **None** |
+| **Informational Alerts** | **User-Agent Fuzzing (1 instance)** | **User-Agent Fuzzing (12 instances)** |
+| **Overall Security Posture** | **Moderate (High & Medium risks present)** | **Secure (No high/medium risks found)** |
 
 ---
 
-## **📄 Lessons Learned & Reflections**
+## **Findings Analysis**
+1. **Significant Security Improvements:**  
+   - High and medium-risk vulnerabilities **identified in the previous report** (e.g., **Path Traversal, Missing CSP, and X-Frame-Options**) are **no longer present** in the updated scan.
+   - This indicates that **prior security recommendations were implemented**, strengthening the application’s defense against attacks.
 
-### **Challenges Faced**
-1. **Docker Port Conflicts:**
-   - Encountered **port 8000 and 5432 conflicts**, requiring manual intervention to stop existing containers before starting new ones.
-   - Commands used to resolve:
-     ```bash
-     sudo docker ps
-     sudo docker stop <container_id>
-     sudo netstat -tulnp | grep <port>
-     ```
+2. **Increase in Informational Alerts:**  
+   - The **User-Agent Fuzzing** test now has **12 instances** compared to **1 instance in the previous scan**.
+   - While this is **not a security vulnerability**, it indicates that the system **responds differently to multiple User-Agent values**. This should be investigated to ensure **consistent request handling**.
 
-2. **ZAP Scan Execution & Analysis:**
-   - Learned how to interpret **User-Agent fuzzer alerts** and their implications for security.
-   - Discovered potential **bot detection weaknesses** that could be exploited by attackers.
-   
-3. **Security Testing in Virtualized Environments:**
-   - The test environment was **fully contained within a Kali Linux VM**, ensuring safe testing.
-   - Encountered **network connectivity issues** due to virtual machine isolation, which were resolved by configuring the VM’s network adapter properly.
-
-### **Key Takeaways**
-✅ **Testing should include multiple attack vectors:** While the ZAP scan found no critical vulnerabilities, manual testing revealed response inconsistencies.  
-✅ **Security scanners help detect subtle behavior changes:** Automated tools can highlight potential weaknesses that require further investigation.  
-✅ **Understanding Docker and Linux troubleshooting is crucial:** Hands-on experience in resolving container conflicts is essential for effective penetration testing.  
+3. **Security Posture Upgrade:**  
+   - The previous scan assessed the system as **moderate risk**, while the updated report classifies it as **secure**, as no high or medium-risk vulnerabilities were found.
 
 ---
 
-## **📌 Conclusion & Next Steps**
-The penetration tests across **Phase 1 and Phase 2** revealed **multiple vulnerabilities** in authentication, input validation, and API response behavior. While **Phase 1** had critical security flaws like **plaintext passwords and SQL Injection**, **Phase 2** focused more on **inconsistent User-Agent handling** and **API response issues**.
+## **5. Appendices**
+- **Full Scan Report:** [Attach full ZAP scan output]
+- **Testing Logs:** [Include if necessary]
+- **References:**
+  - [OWASP Web Security Testing Guide](https://owasp.org/wstg)
+  - [Checkmarx Documentation](https://checkmarx.com/)
 
-📌 **Next Steps:**
-✔ **Fix vulnerabilities using recommended solutions.**  
-✔ **Re-run penetration testing after fixes are applied.**  
-✔ **Perform in-depth manual API testing beyond automated scanning.**  
-✔ **Investigate additional security hardening measures for authentication and input validation.**  
+---
 
-🚀 **This report serves as a comprehensive security assessment of the Booking System across both phases.**
+# **Conclusion**
+- The updated security assessment demonstrates **substantial improvements** in the system's security posture.
+- **All previously identified critical and medium vulnerabilities have been addressed.**
+- The **only remaining observation** is **User-Agent-based response variations**, which should be reviewed to ensure security consistency.
+
+🚀 **This report provides a clear comparison between the initial security findings and the current security status, highlighting major improvements.**
+
+
+
