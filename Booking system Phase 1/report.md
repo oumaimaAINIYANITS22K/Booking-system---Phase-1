@@ -6,11 +6,9 @@
 This report provides a security assessment of the web application using **ZAP by Checkmarx**. The objective is to identify, categorize, and address security vulnerabilities that pose risks to the system. The findings serve as a foundation for strengthening the security posture of the application.
 
 ### Testing Schedule and Environment
-- **Test Conducted On:** [Insert Date]
+- **Test Conducted On:** 19.02.2025
 - **Environment:** Localhost (http://localhost:8000)
 - **Testing Tool Used:** ZAP by Checkmarx
-- **Operating System:** [Insert OS]
-- **Web Framework:** [Insert Framework]
 
 ### Scope of Testing
 The security assessment covered:
